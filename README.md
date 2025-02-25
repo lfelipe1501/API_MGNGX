@@ -10,14 +10,21 @@ Login application with two-factor authentication and subdomain management for Ng
 
 ## Installation
 
-1. Clone the repository
-2. Install dependencies:
+To use it, simply follow the following steps:
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/lfelipe1501/API_MGNGX.git
+   ```
+   
+3. Install dependencies:
 
    ```bash
    npm install
    ```
 
-3. Install PM2 globally to manage the project in a more professional way:
+4. Install PM2 globally to manage the project in a more professional way:
 
    ```bash
    npm install -g pm2
