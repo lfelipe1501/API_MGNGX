@@ -17,7 +17,7 @@ Login application with two-factor authentication and subdomain management for Ng
    npm install
    ```
 
-3. For production, install PM2 globally:
+3. Install PM2 globally to manage the project in a more professional way:
 
    ```bash
    npm install -g pm2
@@ -66,9 +66,9 @@ This will load environment variables from `.env` and use the production port (de
 > [!important]
 > _**BEFORE RUNNING** the project you **MUST** delete the `.sqlite` database to create a new one
 > when starting the project and be able to register your own users._
-> 
+>
 > _**IT IS IMPORTANT** that you put the application behind a reverse proxy so that it can use a domain or subdomain._
-> 
+>
 > _**AFTER THIS** you can edit the `.env` file to add the original keys of a domain or subdomain that has reCAPTCHA V3._
 
 ### Running with PM2
