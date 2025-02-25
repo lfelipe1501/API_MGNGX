@@ -142,3 +142,16 @@ npm run test
 - Nginx subdomain creation
 - Activity logging
 - reCAPTCHA protection
+
+### Contact / Social Media
+
+*Get the latest News about Web Development, Open Source, Tooling, Server & Security*
+
+[![Twitter](https://raw.githubusercontent.com/lfelipe1501/lfelipe-projects/master/icons/filled/twitter.svg)](https://twitter.com/lfelipe1501)
+[![Facebook](https://raw.githubusercontent.com/lfelipe1501/lfelipe-projects/master/icons/filled/facebook.svg)](https://www.facebook.com/lfelipe1501)
+[![Github](https://raw.githubusercontent.com/lfelipe1501/lfelipe-projects/master/icons/filled/github.svg)](https://github.com/lfelipe1501)
+
+### Development by
+
+Developer / Author: [Luis Felipe Sanchez](https://github.com/lfelipe1501)
+Company: [lfsystems](https://www.lfsystems.com.co)
