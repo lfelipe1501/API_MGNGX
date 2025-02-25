@@ -13,15 +13,15 @@ Login application with two-factor authentication and subdomain management for Ng
 1. Clone the repository
 2. Install dependencies:
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. For production, install PM2 globally:
 
-```bash
-npm install -g pm2
-```
+   ```bash
+   npm install -g pm2
+   ```
 
 ## Configuration
 
@@ -75,13 +75,13 @@ This will load environment variables from `.env` and use the production port (de
 
 To run the application with PM2, you can use the following scripts:
 
-#### Production Mod
+#### Prod Mode
 
 ```bash
 npm run pm2:prod
 ```
 
-#### Development Mode
+#### Dev Mode
 
 ```bash
 npm run pm2:dev
@@ -134,4 +134,4 @@ npm run test
 - User management (for administrators)
 - Nginx subdomain creation
 - Activity logging
-- reCAPTCHA protection 
+- reCAPTCHA protection
