@@ -42,6 +42,10 @@ npm run dev
 
 This will load environment variables from `.env.development` and use the development port (default 3001).
 
+> [!important]
+> _**IF YOU WISH** you can use this data to login with the database that is in the project
+> the `.sqlite` file contains the following data to start testing the application:_
+
 | Data | Value |
 |-----|-------------|
 |USERNAME|admin|
@@ -59,11 +63,19 @@ npm run start
 
 This will load environment variables from `.env` and use the production port (default 5001).
 
+> [!important]
+> _**BEFORE RUNNING** the project you **MUST** delete the `.sqlite` database to create a new one
+> when starting the project and be able to register your own users._
+> 
+> _**IT IS IMPORTANT** that you put the application behind a reverse proxy so that it can use a domain or subdomain._
+> 
+> _**AFTER THIS** you can edit the `.env` file to add the original keys of a domain or subdomain that has reCAPTCHA V3._
+
 ### Running with PM2
 
 To run the application with PM2, you can use the following scripts:
 
-#### Production Mode
+#### Production Mod
 
 ```bash
 npm run pm2:prod
