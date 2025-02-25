@@ -1,0 +1,1050 @@
+/* Google Fonts - Poppins */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+:root {
+    color-scheme: light dark;
+    --primary-color: #4CAF50;
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --input-bg: #ffffff;
+    --border-color: #dddddd;
+    --container-bg: rgb(217 247 254 / 6%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-color: #45a049;
+        --background-color: #282523;
+        --text-color: #ffffff;
+        --input-bg: #333333;
+        --border-color: #444444;
+        --container-bg: #4e423b47;
+    }
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: "Poppins", 'Andada Pro', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+input {
+    width: 100%;
+    padding: 12px 35px;
+    margin: 8px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+/* Contenedor base (login/register) */
+.container {
+    max-width: 400px;
+    margin: auto;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgb(107 107 107 / 10%);
+    background-color: var(--container-bg);
+}
+
+/* Contenedor dashboard */
+.container-dashboard {
+    max-width: 535px;
+    margin: auto;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgb(107 107 107 / 10%);
+    background-color: var(--container-bg);
+}
+
+.theme-switch {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.theme-switch button {
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: none;
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.theme-switch button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+h2 {
+    background: #d64937;
+    padding: 10px 0;
+    font-size: 160%;
+    font-weight: 500;
+    text-align: center;
+    color: #fff;
+    margin: 3px -3px 12px -3px;
+    border-radius: 5px;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.input-container,
+.input-container-admin,
+.input-subdomain-admin {
+    position: relative;
+}
+
+/* Estilo específico para el icono principal (izquierda) */
+.input-container .material-icons:not(.toggle-password),
+.input-container-admin .material-icons:not(.toggle-password),
+.input-subdomain-admin .material-icons:not(.toggle-password) {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+/* Estilo específico para el toggle de contraseña (derecha) */
+.input-container .material-icons.toggle-password {
+    position: absolute;
+    right: 12px;
+    left: auto; /* Asegura que no tome la posición left */
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    z-index: 1;
+}
+
+.input-container input,
+.input-container-admin input,
+.input-subdomain-admin input {
+    width: 100%;
+    padding: 12px 35px;
+    margin: 8px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.input-subdomain-admin input {
+    font-size: 14px;
+}
+
+/* Ajuste para el modo oscuro */
+@media (prefers-color-scheme: dark) {
+    .input-container .material-icons,
+    .input-container-admin .material-icons,
+    .input-subdomain-admin .material-icons,
+    .toggle-password.material-icons {
+        color: #999;
+    }
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(76,175,80,0.3);
+}
+
+button {
+    width: 100%;
+    margin-top: 5%;
+    background-color: #37d65c;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    display: inline-block;
+    font-family: CerebriSans-Regular,-apple-system,system-ui,Roboto,sans-serif;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 250ms;
+    border: 0;
+    font-size: 16px;
+    box-shadow: 0 0 11px #9af0ae5c;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.divider {
+    margin: 2rem 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.user-info {
+    margin-bottom: 20px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Welcome text styling */
+.welcome-text {
+    font-size: 1.1em;
+    color: #333;
+}
+
+/* Success message styling */
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Error message styling */
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Loading indicator styling */
+#loading {
+    display: none;
+    margin: 10px 0;
+}
+
+.tfa-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.tfa-container p {
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.tfa-input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.tfa-input {
+    width: 40px !important;
+    height: 40px !important;
+    text-align: center !important;
+    font-size: 1.2em !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    transition: all 0.3s ease !important;
+    padding: 0 !important;
+    margin: 0 4px !important;
+    font-size: 16px;
+}
+
+.tfa-input:focus {
+    outline: none !important;
+    border-color: #1d63ed !important;
+    box-shadow: 0 0 5px rgba(29, 99, 237, 0.3) !important;
+}
+
+/* Asegurarse que los inputs MFA no hereden estilos generales */
+.tfa-input-group input {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Ocultar 2FA */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tfa-container {
+    margin: 20px 0;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.password-container {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    z-index: 1;
+}
+
+/* Estilos de REGISTRO */
+.container-reg {
+    margin: auto;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgb(107 107 107 / 10%);
+    background-color: var(--container-bg); /* Añade esta línea */
+}
+
+.secret-key {
+    background: #fff;
+    padding: 15px;
+    border-radius: 4px;
+    font-family: monospace;
+    margin: 15px 0;
+    border: 1px solid #ddd;
+    color: #d64937;
+}
+.warning {
+    color: #d63031;
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #d63031;
+}
+.download-btn {
+    background: #00b894;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 16px;
+}
+.qr-container {
+    background: white;
+    padding: 20px;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 20px 0;
+}
+
+/* Estilos para las pestañas */
+.tab-container {
+    margin-bottom: 20px;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--text-color);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    background-color: var(--container-bg);
+}
+
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Estilos para el formulario de subdominio */
+#subdomain-tab {
+    background-color: var(--container-bg);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+#subdomain-tab form {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+#loading {
+    display: none;
+    text-align: center;
+    margin: 10px 0;
+}
+
+#result {
+    margin-top: 15px;
+    overflow-wrap: break-word;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Estilos para la tabla y su contenedor */
+.table-wrapper {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    background-color: var(--container-bg);
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0;
+}
+
+.users-table th,
+.users-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.users-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Estilos actualizados para la paginación */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.page-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.page-btn .material-icons {
+    font-size: 20px;
+}
+
+.page-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-number {
+    background-color: rgb(107 107 107 / 10%);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    min-width: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: gray;
+}
+
+.page-number.active {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+.page-number:hover:not(.active) {
+    background-color: #f0f0f0;
+}
+
+.page-dots {
+    padding: 0 4px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .page-btn {
+        border-color: #444;
+        color: #fff;
+    }
+
+    .page-number {
+        background-color: #333;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .page-number:hover:not(.active) {
+        background-color: #444;
+    }
+}
+
+/* Estilos para los botones de acción */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.delete-btn {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    opacity: 0.9;
+}
+
+/* Estilos para el modal */
+.edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.save-btn, .cancel-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.save-btn {
+    background-color: #37d65c;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Estilos para la tabla responsive */
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: var(--container-bg);
+}
+
+/* Estilos para el spinner */
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modificar el botón cuando está cargando */
+button.loading {
+    position: relative;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+button.loading span {
+    visibility: hidden;
+}
+
+button.loading::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+/* Estilos para la vista de logs */
+.logs-container {
+    margin-top: 0px;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.logs-table th,
+.logs-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    vertical-align: top;
+    line-height: 1.5;
+}
+
+.logs-table td {
+    word-break: break-word;
+}
+
+.logs-table strong {
+    display: none;
+}
+
+.logs-table th:last-child,
+.logs-table td:last-child {
+    border-right: none;
+}
+
+.logs-table tr:last-child td {
+    border-bottom: none;
+}
+
+.logs-table th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.logs-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.logs-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.log-row:hover {
+    background-color: rgba(55, 214, 92, 0.1);
+}
+
+.log-row td {
+    max-width: 300px; /* Limitar el ancho máximo de las celdas */
+}
+
+/* Estilos específicos para cada columna */
+.log-row td[data-label="Date/Time"] {
+    white-space: nowrap; /* Mantener fecha en una línea */
+    min-width: 150px;
+}
+
+.log-row td[data-label="Action"] {
+    min-width: 120px;
+}
+
+.log-row td[data-label="Description"] {
+    min-width: 250px;
+}
+
+.log-row td[data-label="Performed By"],
+.log-row td[data-label="Performed On"] {
+    min-width: 120px;
+}
+
+/* Estilos para la tabla de logs */
+.logs-table td .mobile-label {
+    display: none;
+}
+
+.logs-table td .mobile-value {
+    width: 100%;
+}
+
+/* Contenedor específico para logs */
+.logs-container-wrapper {
+    max-width: 800px !important;
+    margin: auto;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgb(107 107 107 / 10%);
+    background-color: var(--container-bg);
+}
+
+/* Estilos para el checkbox de admin (de register.ejs) */
+.admin-checkbox {
+    margin: 15px 0;
+}
+
+.checkbox-container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    background-color: #eee;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #37d65c;
+    border-color: #37d65c;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Estilos para mensajes de error (de index.ejs y register.ejs) */
+#loginError, #registerError {
+    color: red;
+    margin-top: 10px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.logs-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.3s ease;
+    min-width: unset;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.logs-btn:hover {
+    opacity: 0.9;
+}
+
+/* Actualizar los estilos del botón de editar para que coincida con el botón de recargar logs */
+.icon-btn.edit-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.3s ease;
+    min-width: unset;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.icon-btn.edit-btn:hover {
+    opacity: 0.9;
+}
+
+.icon-btn.edit-btn .material-icons {
+    font-size: 20px;
+}
+
+/* Estilos para el botón de logout */
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: unset;
+    width: auto;
+}
+
+.logout-btn .material-icons {
+    font-size: 20px;
+}
+
+.logout-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Estilos para el botón de refrescar */
+.refresh-btn {
+    background-color: #37d65c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+    opacity: 0.9;
+}
+
+.refresh-btn .material-icons {
+    font-size: 20px;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.rotating {
+    animation: rotate 1s linear;
+}
+
+/* Estilos para los botones de acción */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Estilos para los botones de acción */
+.refresh-btn {
+    background-color: #37d65c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+    opacity: 0.9;
+}
+
+.refresh-btn .material-icons {
+    font-size: 20px;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.rotating {
+    animation: rotate 1s linear;
+}
+
+/* Estilos para el botón de logout */
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: unset;
+    width: auto;
+}
+
+.logout-btn .material-icons {
+    font-size: 20px;
+}
+
+.logout-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Estilos para los inputs específicos */
+.input-container input,
+.input-container-admin input,
+.input-subdomain-admin input,
+.tfa-input,
+.modal-input {
+    font-size: 18px;
+}

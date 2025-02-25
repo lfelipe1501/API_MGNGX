@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="container-dashboard">
+        <div class="user-info">
+            <span>Welcome Admin, <strong><%= username %></strong></span>
+            <div class="admin-actions">
+                <button onclick="viewLogs()" class="logs-btn" title="View Logs">
+                    <span class="material-icons">description</span>
+                </button>
+                <button onclick="logout()" class="logout-btn">
+                    <span class="material-icons">power_settings_new</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab('users')">User Management</button>
+                <button class="tab-button" onclick="showTab('subdomain')">Create Subdomain</button>
+            </div>
+        </div>
+
+        <!-- Tab Content: User Management -->
+        <div id="users-tab" class="tab-content active">
+            <h2>User Management</h2>
+            <div class="table-wrapper">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="usersPagination">
+                <button id="prevPageUsers" class="page-btn">
+                    <span class="material-icons">arrow_back</span>
+                    <span>Previous</span>
+                </button>
+                <div class="page-numbers" id="pageNumbersUsers"></div>
+                <button id="nextPageUsers" class="page-btn">
+                    <span>Next</span>
+                    <span class="material-icons">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content: Subdomain Creation -->
+        <div id="subdomain-tab" class="tab-content">
+            <h2>Create Subdomain</h2>
+            <form id="subdomainForm">
+                <div class="input-subdomain-admin">
+                    <span class="material-icons">language</span>
+                    <input type="text" 
+                           name="NSBDMN" 
+                           id="subdomainInput"
+                           maxlength="20"
+                           placeholder="Enter subdomain name" 
+                           pattern="[a-zA-Z0-9][a-zA-Z0-9\-_.]*[a-zA-Z0-9]"
+                           title="Must start and end with letter or number. Only letters, numbers, hyphens, underscores and dots allowed"
+                           required>
+                </div>
+                <button type="submit">Create Subdomain</button>
+            </form>
+            <div id="loading">Processing...</div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const token = '<%= token %>';
+        localStorage.setItem('jwtToken', token);
+
+        async function checkAuth() {
+            const storedToken = localStorage.getItem('jwtToken');
+            if (!storedToken) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch('/check-session', {
+                    headers: {
+                        'Authorization': `Bearer ${storedToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Session invalid');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('jwtToken');
+                window.location.href = '/';
+            }
+        }
+
+        // Inicializar verificación y configurar intervalo
+        checkAuth();
+        setInterval(checkAuth, 30000);
+
+        function showTab(tabName) {
+            // Ocultar todos los contenidos y desactivar botones
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Mostrar el contenido seleccionado y activar botón
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+
+        let currentPageUsers = 1;
+        let totalPagesUsers = 1;
+
+        async function loadUsers(page = 1) {
+            try {
+                const response = await fetch(`/api/users?page=${page}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    }
+                });
+                const data = await response.json();
+                
+                currentPageUsers = data.currentPage;
+                totalPagesUsers = data.totalPages;
+                updatePaginationControlsUsers();
+                
+                const userTableBody = document.getElementById('userTableBody');
+                if (data.users.length === 0) {
+                    userTableBody.innerHTML = '<tr><td colspan="4" class="error-message">No users found.</td></tr>';
+                    return;
+                }
+                
+                const sortedUsers = data.users;
+                userTableBody.innerHTML = sortedUsers.map(user => `
+                    <tr>
+                        <td data-label="ID">${user.id}</td>
+                        <td data-label="Username">${user.username}</td>
+                        <td data-label="Role">${user.isadmin ? 'Admin' : 'User'}</td>
+                        <td data-label="Actions" class="action-buttons">
+                            <button class="icon-btn edit-btn" onclick="editUser(${user.id})" title="Edit User">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="delete-btn" onclick="deleteUser(${user.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('userTableBody').innerHTML = 
+                    '<tr><td colspan="4" class="error-message">Error loading users. Please try again.</td></tr>';
+            }
+        }
+
+        function updatePaginationControlsUsers() {
+            const prevButton = document.getElementById('prevPageUsers');
+            const nextButton = document.getElementById('nextPageUsers');
+            const pageNumbers = document.getElementById('pageNumbersUsers');
+            
+            prevButton.disabled = currentPageUsers <= 1;
+            nextButton.disabled = currentPageUsers >= totalPagesUsers;
+            
+            // Generar números de página
+            let html = '';
+            const maxButtons = 3;
+            let startPage = Math.max(1, currentPageUsers - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPagesUsers, startPage + maxButtons - 1);
+            
+            // Ajustar startPage si estamos cerca del final
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+            
+            // Agregar primera página y puntos suspensivos si es necesario
+            if (startPage > 1) {
+                html += `<button onclick="loadUsers(1)" class="page-number ${1 === currentPageUsers ? 'active' : ''}">1</button>`;
+                if (startPage > 2) html += '<span class="page-dots">...</span>';
+            }
+            
+            // Agregar números de página
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button onclick="loadUsers(${i})" class="page-number ${i === currentPageUsers ? 'active' : ''}">${i}</button>`;
+            }
+            
+            // Agregar última página y puntos suspensivos si es necesario
+            if (endPage < totalPagesUsers) {
+                if (endPage < totalPagesUsers - 1) html += '<span class="page-dots">...</span>';
+                html += `<button onclick="loadUsers(${totalPagesUsers})" class="page-number ${totalPagesUsers === currentPageUsers ? 'active' : ''}">${totalPagesUsers}</button>`;
+            }
+            
+            pageNumbers.innerHTML = html;
+        }
+
+        // Event listeners para los botones de paginación
+        document.getElementById('prevPageUsers').addEventListener('click', () => {
+            if (currentPageUsers > 1) {
+                loadUsers(currentPageUsers - 1);
+            }
+        });
+
+        document.getElementById('nextPageUsers').addEventListener('click', () => {
+            if (currentPageUsers < totalPagesUsers) {
+                loadUsers(currentPageUsers + 1);
+            }
+        });
+
+        async function editUser(userId) {
+            const modal = document.createElement('div');
+            modal.className = 'edit-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Edit User</h3>
+                    <div class="form-group">
+                        <label>Username (leave blank to keep current):</label>
+                        <input type="text" 
+                               id="editUsername" 
+                               class="modal-input"
+                               pattern="[a-zA-Z][a-zA-Z0-9\-_]*"
+                               title="Must start with a letter. Only letters, numbers, hyphens and underscores allowed"
+                               minlength="3"
+                               maxlength="14">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password (leave blank to keep current):</label>
+                        <input type="password" id="editPassword" class="modal-input">
+                    </div>
+                    <div class="modal-buttons">
+                        <button onclick="saveUserChanges(${userId})" class="save-btn">Save Changes</button>
+                        <button onclick="closeModal()" class="cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Agregar validación en tiempo real para el username
+            const usernameInput = document.getElementById('editUsername');
+            usernameInput.addEventListener('input', function(e) {
+                
+                // Remover espacios y convertir a minúsculas en tiempo real
+                let value = e.target.value.replace(/\s+/g, '').toLowerCase();
+                
+                // Si el primer carácter no es una letra, eliminarlo
+                if (!/^[a-zA-Z]/.test(value) && value.length > 0) {
+                    value = value.substring(1);
+                }
+                
+                // Permitir solo letras, números, guiones y guiones bajos
+                value = value.replace(/[^a-zA-Z0-9_-]/g, '');
+                
+                e.target.value = value;
+            });
+        }
+
+        async function saveUserChanges(userId) {
+            const newUsername = document.getElementById('editUsername').value.trim();
+            const newPassword = document.getElementById('editPassword').value.trim();
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    },
+                    body: JSON.stringify({ 
+                        username: newUsername,
+                        password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadUsers();
+                } else {
+                    alert('Error updating user');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                alert('Error updating user');
+            }
+        }
+
+        function closeModal() {
+            const modal = document.querySelector('.edit-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+            }
+        }
+
+        // Manejar el formulario de subdominio
+        document.getElementById('subdomainForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subdomainInput = document.getElementById('subdomainInput');
+            const subdomain = subdomainInput.value.trim();
+            
+            // Validar formato
+            if (!/^[a-z0-9][a-z0-9\-_\.]*[a-z0-9]$/.test(subdomain)) {
+                document.getElementById('result').innerHTML = 
+                    '<div class="message error">Subdomain must start and end with letter or number, and contain only letters, numbers, hyphens, underscores or dots</div>';
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            try {
+                loading.style.display = 'block';
+                const response = await fetch('/nsubdmn', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    },
+                    body: new URLSearchParams({ NSBDMN: subdomain })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="message success">${data.result}</div>`;
+                    subdomainInput.value = '';
+                } else {
+                    result.innerHTML = `<div class="message error">${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        document.getElementById('subdomainInput').addEventListener('input', function(e) {
+            let value = e.target.value;
+            
+            // Convertir a minúsculas y remover espacios
+            value = value.toLowerCase().trim();
+            
+            // Procesar el primer carácter
+            if (value.length > 0) {
+                // Obtener el primer carácter válido (letra o número)
+                const firstValidChar = value.match(/[a-z0-9]/);
+                if (!firstValidChar) {
+                    // Si no hay caracteres válidos, limpiar el input
+                    value = '';
+                } else {
+                    // Comenzar desde el primer carácter válido
+                    const startIndex = value.indexOf(firstValidChar[0]);
+                    value = value.slice(startIndex);
+                    
+                    // Validar el resto de la cadena
+                    if (value.length > 1) {
+                        value = value.charAt(0) + value.slice(1).replace(/[^a-z0-9\-_\.]/g, '');
+                    }
+                }
+            }
+            
+            e.target.value = value;
+        });
+
+        async function logout() {
+            const logoutBtn = document.querySelector('.logout-btn');
+            logoutBtn.classList.add('loading');
+            
+            try {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    }
+                });
+            } finally {
+                localStorage.removeItem('jwtToken');
+                window.location.href = '/';
+            }
+        }
+
+        function viewLogs() {
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+            window.location.href = '/dashboard-logs';
+        }
+
+        // Cargar usuarios al iniciar
+        loadUsers();
+    </script>
+</body>
+</html> 

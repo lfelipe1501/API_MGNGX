@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+    <title>Register</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>REGISTER FORM</h2>
+        <form id="regForm">
+            <div class="input-container">
+                <span class="material-icons">person</span>
+                <input type="text" name="username" placeholder="Username" required minlength="3" maxlength="14" pattern="[a-zA-Z][a-zA-Z0-9\-_]*" title="Must start with a letter. Only letters, numbers, hyphens and underscores allowed" autofocus>
+            </div>
+            <div class="input-container">
+                <span class="material-icons">lock</span>
+                <input type="password" id="regPassword" name="password" placeholder="Password" required minlength="8">
+                <span class="material-icons toggle-password" onclick="togglePassword('regPassword')">visibility</span>
+            </div>
+            <div class="form-group admin-checkbox">
+                <label class="checkbox-container">
+                    <input type="checkbox" name="isadmin" value="1">
+                    <span class="checkmark"></span>
+                    Is ADMIN
+                </label>
+            </div>
+            <button type="submit">REGISTER</button>
+        </form>
+        <div id="registerError"></div>
+        <div id="qrCode"></div>
+    </div>
+
+    <script>
+        document.getElementById('regForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('registerError');
+            
+            try {
+                const formData = new FormData(e.target);
+                const data = {
+                    username: formData.get('username'),
+                    password: formData.get('password'),
+                    isadmin: formData.get('isadmin') === '1'
+                };
+
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const html = await response.text();
+                    // Abrir en una nueva ventana
+                    const win = window.open('', '_blank');
+                    win.document.write(html);
+                    win.document.close();
+                    
+                    // Limpiar el formulario y mostrar mensaje de éxito
+                    e.target.reset();
+                    errorDiv.style.color = 'green';
+                    errorDiv.textContent = 'Registration successful! Please check the new window for your MFA configuration.';
+                } else {
+                    const error = await response.text();
+                    errorDiv.style.color = 'red';
+                    errorDiv.textContent = error || 'Registration failed. Please try again.';
+                }
+            } catch (error) {
+                errorDiv.style.color = 'red';
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                console.error('Error:', error);
+            }
+        });
+
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = passwordInput.nextElementSibling;
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = 'visibility';
+            }
+        }
+
+        // Agregar el evento input para validación en tiempo real
+        document.querySelector('input[name="username"]').addEventListener('input', function(e) {
+            // Remover espacios y convertir a minúsculas en tiempo real
+            let value = e.target.value.replace(/\s+/g, '').toLowerCase();
+            
+            // Si el primer carácter no es una letra, eliminarlo
+            if (!/^[a-z]/.test(value) && value.length > 0) {
+                value = value.substring(1);
+            }
+            
+            // Permitir letras, números, guiones y guiones bajos
+            value = value.replace(/[^a-z0-9_-]/g, '');
+            
+            e.target.value = value;
+        });
+
+        // Asegurar que el input de usuario tenga el foco al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('input[name="username"]').focus();
+        });
+    </script>
+</body>
+</html>

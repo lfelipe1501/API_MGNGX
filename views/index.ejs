@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <% if (isProduction) { %>
+    <!-- Recaptcha V3 para producción -->
+    <script src="https://www.google.com/recaptcha/api.js?render=<%= RECAPTCHA_SITE_KEY %>"></script>
+    <% } else { %>
+    <!-- Recaptcha V2 Invisible para desarrollo -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <% } %>
+</head>
+<body>
+	<div class="container">
+		<h2>LOGIN FORM</h2>
+		<form id="loginForm">
+			<div class="input-container">
+				<span class="material-icons">person</span>
+				<input type="text" name="username" placeholder="Username" required minlength="3" maxlength="14" pattern="[a-zA-Z][a-zA-Z0-9\-_]*" title="Must start with a letter. Only letters, numbers, hyphens and underscores allowed" autofocus>
+			</div>
+			<div class="input-container">
+				<span class="material-icons">lock</span>
+				<input type="password" id="password" name="password" placeholder="Password" required title="Please enter your password" minlength="8">
+				<span class="material-icons toggle-password" onclick="togglePassword('password')">visibility</span>
+			</div>
+			
+			<!-- Nuevo contenedor para el 2FA -->
+			<div class="tfa-container" id="tfaContainer" style="display: none">
+				<p>Authenticate Your Account</p>
+				<div class="tfa-input-group">
+					<input type="tel" inputmode="numeric" class="tfa-input" maxlength="1" pattern="\d" required>
+					<input type="tel" inputmode="numeric" class="tfa-input" maxlength="1" pattern="\d" required>
+					<input type="tel" inputmode="numeric" class="tfa-input" maxlength="1" pattern="\d" required>
+					<input type="tel" inputmode="numeric" class="tfa-input" maxlength="1" pattern="\d" required>
+					<input type="tel" inputmode="numeric" class="tfa-input" maxlength="1" pattern="\d" required>
+					<input type="tel" inputmode="numeric" class="tfa-input" maxlength="1" pattern="\d" required>
+				</div>
+				<input type="hidden" name="token" id="tokenInput">
+			</div>
+
+			<input type="hidden" name="recaptchaToken" id="recaptchaToken">
+			
+			<% if (!isProduction) { %>
+			<!-- Recaptcha V2 Invisible para desarrollo -->
+			<div class="g-recaptcha" 
+				data-sitekey="<%= RECAPTCHA_SITE_KEY %>" 
+				data-callback="onRecaptchaSuccess" 
+				data-size="invisible">
+			</div>
+			<% } %>
+			
+			<button type="submit"><span>LOGIN</span></button>
+		</form>
+		<div id="loginError"></div>
+	</div>
+
+	<script>
+		// Manejo de inputs 2FA
+		const tfaInputs = document.querySelectorAll('.tfa-input');
+		const tokenInput = document.getElementById('tokenInput');
+		
+		const usernameInput = document.querySelector('input[name="username"]');
+		const passwordInput = document.querySelector('input[name="password"]');
+		const tfaContainer = document.getElementById('tfaContainer');
+		const submitButton = document.querySelector('button[type="submit"]');
+		
+		function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = passwordInput.nextElementSibling;
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = 'visibility';
+            }
+        }
+		
+		// Función para verificar los campos
+		function checkFields() {
+			const username = usernameInput.value.trim();
+			const password = passwordInput.value.trim();
+			
+			if (username && password && password.length >= 8) {
+				tfaContainer.style.display = 'block';
+				tfaContainer.classList.add('fade-in');
+			} else {
+				tfaContainer.style.display = 'none';
+				tfaContainer.classList.remove('fade-in');
+				// Limpiar los campos de 2FA si se ocultan
+				tfaInputs.forEach(input => input.value = '');
+			}
+		}
+
+		// Agregar listeners para los campos
+		usernameInput.addEventListener('input', checkFields);
+		passwordInput.addEventListener('input', checkFields);
+
+		tfaInputs.forEach((input, index) => {
+			// Solo permitir números
+			input.addEventListener('input', (e) => {
+				e.target.value = e.target.value.replace(/[^0-9]/g, '');
+				
+				if (e.target.value) {
+					// Mover al siguiente input
+					if (index < tfaInputs.length - 1) {
+						tfaInputs[index + 1].focus();
+					}
+				}
+			});
+
+			// Manejar el borrado
+			input.addEventListener('keydown', (e) => {
+				if (e.key === 'Backspace' && !e.target.value && index > 0) {
+					tfaInputs[index - 1].focus();
+				}
+			});
+		});
+
+		<% if (!isProduction) { %>
+		// Función de callback para reCAPTCHA v2 Invisible
+		let recaptchaCompleted = false;
+		let pendingFormSubmission = null;
+
+		function onRecaptchaSuccess(token) {
+			recaptchaCompleted = true;
+			document.getElementById('recaptchaToken').value = token;
+			
+			// Si hay una sumisión pendiente, procesarla ahora
+			if (pendingFormSubmission) {
+				const formEvent = pendingFormSubmission;
+				pendingFormSubmission = null;
+				processFormSubmission(formEvent);
+			}
+		}
+		<% } %>
+
+		// Función para procesar el envío del formulario
+		async function processFormSubmission(e) {
+			const submitButton = e.target.querySelector('button[type="submit"]');
+			const errorDiv = document.getElementById('loginError');
+			
+			// Verificar que todos los campos estén completos
+			const username = usernameInput.value.trim();
+			const password = passwordInput.value.trim();
+			const tfaComplete = Array.from(tfaInputs).every(input => input.value.length === 1);
+
+			if (!username || !password || !tfaComplete) {
+				errorDiv.textContent = 'Please complete all fields';
+				submitButton.classList.remove('loading');
+				return;
+			}
+			
+			// Combinar los valores de los inputs en un solo token
+			const token = Array.from(tfaInputs)
+				.map(input => input.value)
+				.join('');
+			tokenInput.value = token;
+			
+			try {
+				<% if (isProduction) { %>
+				// Recaptcha V3 (invisible)
+				const recaptchaToken = await grecaptcha.execute('<%= RECAPTCHA_SITE_KEY %>', { action: 'login' });
+				document.getElementById('recaptchaToken').value = recaptchaToken;
+				<% } %>
+
+				const formData = new FormData(e.target);
+				const formDataObject = {};
+				formData.forEach((value, key) => {
+					formDataObject[key] = value;
+				});
+
+				const response = await fetch('/login', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(formDataObject)
+				});
+
+				const data = await response.json();
+				
+				if (data.success) {
+					localStorage.setItem('jwtToken', data.token);
+					window.location.href = '/dashboard';
+				} else {
+					submitButton.classList.remove('loading');
+					errorDiv.textContent = data.error || 'Login failed';
+					console.error('Error:', errorDiv.textContent);
+					
+					<% if (!isProduction) { %>
+					// Resetear el captcha en desarrollo
+					grecaptcha.reset();
+					recaptchaCompleted = false;
+					<% } %>
+					
+					if (errorDiv.textContent ==  "Invalid MFA token") {
+						tfaInputs.forEach(input => input.value = '');
+						tfaInputs[0].focus();
+					} else {
+						tfaInputs.forEach(input => input.value = '');
+						tfaContainer.style.display = 'none';
+						tfaContainer.classList.remove('fade-in');
+						usernameInput.value = '';
+						passwordInput.value = '';
+						usernameInput.focus();
+					}
+				}
+			} catch (error) {
+				submitButton.classList.remove('loading');
+				console.error('Error:', error);
+				errorDiv.textContent = 'An error occurred during login';
+				
+				<% if (!isProduction) { %>
+				// Resetear el captcha en desarrollo
+				grecaptcha.reset();
+				recaptchaCompleted = false;
+				<% } %>
+			}
+		}
+
+		// Actualizar el formulario antes de enviar
+		document.getElementById('loginForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+			
+			const submitButton = e.target.querySelector('button[type="submit"]');
+			submitButton.classList.add('loading');
+			
+			<% if (!isProduction) { %>
+			// En desarrollo, usar reCAPTCHA v2 Invisible
+			if (!recaptchaCompleted) {
+				pendingFormSubmission = e;
+				grecaptcha.execute();
+				return;
+			}
+			<% } %>
+			
+			// Procesar el formulario
+			processFormSubmission(e);
+		});
+
+		// Agregar el evento input para validación en tiempo real
+		document.querySelector('input[name="username"]').addEventListener('input', function(e) {
+			// Remover espacios y convertir a minúsculas en tiempo real
+			let value = e.target.value.replace(/\s+/g, '').toLowerCase();
+			
+			// Si el primer carácter no es una letra, eliminarlo
+			if (!/^[a-z]/.test(value) && value.length > 0) {
+				value = value.substring(1);
+			}
+			
+			// Permitir letras, números, guiones y guiones bajos
+			value = value.replace(/[^a-z0-9_-]/g, '');
+			
+			e.target.value = value;
+		});
+
+		// Asegurar que el input de usuario tenga el foco al cargar la página
+		document.addEventListener('DOMContentLoaded', () => {
+			document.querySelector('input[name="username"]').focus();
+		});
+	</script>
+</body>
+</html>

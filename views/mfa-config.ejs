@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+    <title>MFA Configuration - <%= username %></title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="container-reg">
+        <h2>MFA Configuration for <%= username %></h2>
+        <div class="warning">
+            ⚠️ IMPORTANT: Save this information securely. You won't be able to see it again!
+        </div>
+        <h3>Your Account Credentials</h3>
+        <div class="secret-key">username: <%= username %></div>
+        <div class="secret-key">password: <%= password %></div>
+        <h3>MFA Configuration</h3>
+        <h3>1. Scan this QR code with your authenticator app:</h3>
+        <div class="qr-container">
+            <img src="<%= qrCodeUrl %>" alt="QR Code">
+        </div>
+        <h3>2. Or enter this code manually:</h3>
+        <div class="secret-key">Code: <%= secretKey %></div>
+        <button onclick="window.print()" class="download-btn">Print/Save as PDF</button>
+    </div>
+</body>
+</html> 

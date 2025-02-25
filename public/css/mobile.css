@@ -1,0 +1,175 @@
+/* Estilos responsive generales */
+@media screen and (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 1rem;
+    }
+
+    /* Estilos para tablas de usuarios */
+    .users-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .users-table thead {
+        display: none;
+    }
+
+    .users-table tr {
+        display: block;
+        margin: 1rem auto;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.5rem;
+        max-width: 90%;
+    }
+
+    .users-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        text-align: right;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .users-table td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        padding-right: 1rem;
+    }
+
+    .users-table td:last-child {
+        border-bottom: none;
+    }
+
+    /* Estilos para botones y acciones */
+    .action-buttons {
+        justify-content: center;
+        margin-top: 0.5rem;
+        gap: 8px;
+    }
+
+    .edit-btn, .delete-btn {
+        padding: 8px 16px;
+        margin: 2px;
+        min-width: 80px;
+    }
+
+    /* Estilos para la tabla de logs */
+    .logs-table {
+        border: none;
+        background: none;
+    }
+
+    .logs-table thead {
+        display: none;
+    }
+
+    .logs-table tr {
+        display: block;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--container-bg);
+    }
+
+    .logs-table td {
+        display: block;
+        padding: 12px 15px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .logs-table td:last-child {
+        border-bottom: none;
+    }
+
+    .logs-table strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--primary-color);
+        font-size: 0.9rem;
+    }
+
+    .logs-table td:nth-child(1) {
+        background-color: rgba(76, 175, 80, 0.1);
+    }
+
+    .logs-table td:nth-child(3) {
+        white-space: normal;
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+
+    /* Estilos para contenedores y paginación */
+    .logs-container-wrapper {
+        padding: 1rem;
+        margin: 1rem;
+        width: auto;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .page-btn .material-icons {
+        font-size: 16px;
+    }
+
+    /* Estilos para botones de acción */
+    .refresh-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .refresh-btn .material-icons {
+        font-size: 18px;
+    }
+
+    .mobile-label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .logout-btn {
+        padding: 6px 12px;
+    }
+
+    .logout-btn .material-icons {
+        font-size: 18px;
+    }
+
+    /* Estilos para inputs específicos */
+    .input-subdomain-admin input {
+        font-size: 13px;
+    }
+
+    .icon-btn.edit-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .icon-btn.edit-btn .material-icons {
+        font-size: 18px;
+    }
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media screen and (max-width: 480px) {
+    .logs-container-wrapper {
+        padding: 1rem;
+        margin: 0.5rem;
+    }
+
+    .logs-table td {
+        padding: 10px 12px;
+    }
+}

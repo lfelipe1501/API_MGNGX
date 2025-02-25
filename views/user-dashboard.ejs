@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Andada+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    <div class="container">
+        <div class="user-info">
+            <span>Welcome, <strong><%= username %></strong></span>
+            <button onclick="logout()" class="logout-btn">
+                <span class="material-icons">power_settings_new</span>
+                <span>Logout</span>
+            </button>
+        </div>
+        
+        <h2>Create Subdomain</h2>
+        <form id="subdomainForm">
+            <div class="input-container">
+                <span class="material-icons">language</span>
+                <input type="text" 
+                       name="NSBDMN" 
+                       id="subdomainInput"
+                       maxlength="20"
+                       placeholder="Enter subdomain name" 
+                       pattern="[a-zA-Z0-9][a-zA-Z0-9\-_.]*[a-zA-Z0-9]"
+                       title="Must start and end with letter or number. Only letters, numbers, hyphens, underscores and dots allowed"
+                       required>
+            </div>
+            <button type="submit">Create Subdomain</button>
+        </form>
+        <div id="loading">Processing...</div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const token = '<%= token %>';
+        localStorage.setItem('jwtToken', token);
+
+        async function checkAuth() {
+            const storedToken = localStorage.getItem('jwtToken');
+            if (!storedToken) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch('/check-session', {
+                    headers: {
+                        'Authorization': `Bearer ${storedToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Session invalid');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('jwtToken');
+                window.location.href = '/';
+            }
+        }
+
+        checkAuth();
+        setInterval(checkAuth, 30000);
+
+        async function logout() {
+            const logoutBtn = document.querySelector('.logout-btn');
+            logoutBtn.classList.add('loading');
+            
+            try {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    }
+                });
+            } finally {
+                localStorage.removeItem('jwtToken');
+                window.location.href = '/';
+            }
+        }
+
+        document.getElementById('subdomainInput').addEventListener('input', function(e) {
+            let value = e.target.value;
+            
+            // Convertir a minúsculas y remover espacios
+            value = value.toLowerCase().trim();
+            
+            // Procesar el primer carácter
+            if (value.length > 0) {
+                // Obtener el primer carácter válido (letra o número)
+                const firstValidChar = value.match(/[a-z0-9]/);
+                if (!firstValidChar) {
+                    // Si no hay caracteres válidos, limpiar el input
+                    value = '';
+                } else {
+                    // Comenzar desde el primer carácter válido
+                    const startIndex = value.indexOf(firstValidChar[0]);
+                    value = value.slice(startIndex);
+                    
+                    // Validar el resto de la cadena
+                    if (value.length > 1) {
+                        value = value.charAt(0) + value.slice(1).replace(/[^a-z0-9\-_\.]/g, '');
+                    }
+                }
+            }
+            
+            e.target.value = value;
+        });
+
+        document.getElementById('subdomainForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subdomainInput = document.getElementById('subdomainInput');
+            const subdomain = subdomainInput.value.trim();
+            
+            if (!/^[a-z0-9][a-z0-9\-_\.]*[a-z0-9]$/.test(subdomain)) {
+                document.getElementById('result').innerHTML = 
+                    '<div class="message error">Subdomain must start and end with letter or number, and contain only letters, numbers, hyphens, underscores or dots</div>';
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            try {
+                loading.style.display = 'block';
+                const response = await fetch('/nsubdmn', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                    },
+                    body: new URLSearchParams({ NSBDMN: subdomain })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="message success">${data.result}</div>`;
+                    e.target.reset();
+                } else {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        result.innerHTML = `<div class="message error">${data.error}</div>`;
+                    }
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
