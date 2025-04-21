@@ -16,24 +16,24 @@
     "test": "echo \"Verification Environment:\" && bun run server.js --check-env && echo \"\n\nVerification Environment: OK\" && echo ''"
   },
   "keywords": ["bun", "login", "2fa"],
-  "author": "",
-  "license": "ISC",
+  "author": "Luis Felipe <luis.felipe@gmail.com>",
+  "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.3",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
     "connect-sqlite3": "^0.9.15",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
     "helmet": "^8.1.0",
     "ip-range-check": "^0.2.0",
     "jsonwebtoken": "^9.0.2",
     "qrcode": "^1.5.4",
-    "shelljs": "^0.8.5",
+    "shelljs": "^0.9.2",
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.7",
     "ua-parser-js": "^2.0.3"
   }
-} 
+}
