@@ -1,16 +1,22 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const { db } = require('./db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const speakeasy = require('speakeasy');
-const QRCode = require('qrcode');
-const dotenv = require('dotenv');
-const shell = require('shelljs');
-const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
-const path = require('path');
-const ipRangeCheck = require('ip-range-check');
+import express from 'express';
+import bodyParser from 'body-parser';
+import { db, getLocalDateTime } from './db.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
+import dotenv from 'dotenv';
+import shell from 'shelljs';
+import session from 'express-session';
+import connectSqlite3 from 'connect-sqlite3';
+import path from 'path';
+import ipRangeCheck from 'ip-range-check';
+import { fileURLToPath } from 'url';
+import securityConfig from './config/security.js';
+
+// Configurar __dirname para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Determinar qué archivo .env cargar según NODE_ENV
 const envFile = process.env.NODE_ENV === 'development' ? '.env.development' : '.env';
@@ -46,6 +52,9 @@ const app = express();
 app.set('trust proxy', true);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+// Configurar SQLiteStore para sesiones
+const SQLiteStore = connectSqlite3(session);
 
 app.use(session({
     store: new SQLiteStore({
@@ -116,17 +125,15 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-const config = require('./config/security');
-
 const checkAllowedIP = (req, res, next) => {
-    if (!config.IP_WHITELIST_ENABLED) {
+    if (!securityConfig.IP_WHITELIST_ENABLED) {
         return next();
     }
 
     const clientIP = req.ip;
     
     // Verificar si la IP está en la lista de permitidos (IP individual o rango CIDR)
-    const isAllowed = config.ALLOWED_IPS.some(allowedIP => {
+    const isAllowed = securityConfig.ALLOWED_IPS.some(allowedIP => {
         // Si es un rango CIDR (contiene /)
         if (allowedIP.includes('/')) {
             return ipRangeCheck(clientIP, allowedIP);
@@ -198,367 +205,214 @@ app.post('/register', checkAllowedIP, async (req, res) => {
         });
 
         // Insertar usuario en la base de datos
-        await new Promise((resolve, reject) => {
-            db.run(
-                'INSERT INTO users (username, password, secret, isadmin, created_at) VALUES (?, ?, ?, ?, datetime("now", "localtime"))',
-                [username, hashedPassword, secret.base32, isadmin ? 1 : 0],
-                function(err) {
-                    if (err) reject(err);
-                    resolve();
+        db.run(
+            'INSERT INTO users (username, password, secret, isadmin, created_at) VALUES (?, ?, ?, ?, ?)',
+            [username, hashedPassword, secret.base32, isadmin ? 1 : 0, getLocalDateTime()],
+            function(err) {
+                if (err) {
+                    console.error('Error al registrar usuario:', err.message);
+                    return res.status(500).send('Error registering user');
                 }
-            );
-        });
-
-        // Generar código QR
-        const qrCodeUrl = await new Promise((resolve, reject) => {
-            QRCode.toDataURL(secret.otpauth_url, (err, url) => {
-                if (err) reject(err);
-                resolve(url);
-            });
-        });
-
-        // Renderizar la vista EJS en lugar de enviar HTML directamente
-        res.render('mfa-config', {
-            username,
-            password,
-            qrCodeUrl,
-            secretKey: secret.base32
-        });
-
+                
+                // Generar QR code para configurar la app de autenticación
+                QRCode.toDataURL(secret.otpauth_url, (err, data_url) => {
+                    if (err) {
+                        console.error('Error al generar QR code:', err);
+                        return res.status(500).send('Error generating QR code');
+                    }
+                    
+                    // Agregar log del registro
+                    const userId = this.lastID;
+                    db.run(
+                        'INSERT INTO logs (action_type, action_description, performed_by, performed_on, created_at) VALUES (?, ?, ?, ?, ?)',
+                        ['USER_REGISTER', `New user registered: ${username}`, userId, userId, getLocalDateTime()]
+                    );
+                    
+                    // Devolver QR code y secreto
+                    res.json({
+                        success: true,
+                        message: 'User registered successfully',
+                        qr_code: data_url,
+                        secret: secret.base32
+                    });
+                });
+            }
+        );
     } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).send('Error during registration. Please try again.');
+        console.error('Error en el registro:', error);
+        res.status(500).send('Server error');
     }
 });
-
 
 app.post('/login', async (req, res) => {
-    const { password, token, recaptchaToken } = req.body;
-    // Convertir username a minúsculas
-    const username = req.body.username.toLowerCase();
-
-    if (!await verifyRecaptcha(recaptchaToken)) {
-        return res.status(400).json({ 
-            success: false, 
-            error: 'reCAPTCHA verification failed' 
+    try {
+        const { username, password, token, recaptchaToken } = req.body;
+        
+        // Validar recaptcha
+        if (!recaptchaToken) {
+            return res.status(400).json({ error: 'reCAPTCHA verification failed' });
+        }
+        
+        const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+        if (!isRecaptchaValid) {
+            return res.status(400).json({ error: 'reCAPTCHA verification failed' });
+        }
+        
+        // Buscar usuario
+        db.get('SELECT * FROM users WHERE username = ?', [username.toLowerCase()], async (err, user) => {
+            if (err) {
+                console.error('Error al buscar usuario:', err.message);
+                return res.status(500).json({ error: 'Server error' });
+            }
+            
+            if (!user) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+            
+            // Verificar contraseña
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+            
+            // Verificar token MFA
+            const isTokenValid = speakeasy.totp.verify({
+                secret: user.secret,
+                encoding: 'base32',
+                token: token,
+                window: 1 // Permitir 1 intervalo de tiempo antes/después
+            });
+            
+            if (!isTokenValid) {
+                return res.status(401).json({ error: 'Invalid 2FA token' });
+            }
+            
+            // Actualizar last_login
+            db.run(
+                'UPDATE users SET last_login = ? WHERE id = ?',
+                [getLocalDateTime(), user.id]
+            );
+            
+            // Agregar log de inicio de sesión
+            db.run(
+                'INSERT INTO logs (action_type, action_description, performed_by, performed_on, created_at) VALUES (?, ?, ?, ?, ?)',
+                ['USER_LOGIN', `User logged in: ${username}`, user.id, user.id, getLocalDateTime()]
+            );
+            
+            // Generar JWT
+            const jwtToken = jwt.sign(
+                { 
+                    id: user.id, 
+                    username: user.username,
+                    isadmin: user.isadmin === 1
+                },
+                JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+            
+            // Almacenar información en la sesión
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            req.session.isadmin = user.isadmin === 1;
+            
+            // Devolver información y token
+            res.json({
+                success: true,
+                token: jwtToken,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    isadmin: user.isadmin === 1
+                }
+            });
         });
+    } catch (error) {
+        console.error('Error en el login:', error);
+        res.status(500).json({ error: 'Server error' });
     }
+});
 
-    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-        if (err || !user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Invalid credentials' 
-            });
+// Ruta para cerrar sesión
+app.post('/logout', (req, res) => {
+    // Destruir la sesión
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error al cerrar sesión:', err);
+            return res.status(500).json({ error: 'Error cerrando sesión' });
         }
-
-        const verified = speakeasy.totp.verify({
-            secret: user.secret,
-            encoding: 'base32',
-            token: token,
-            window: 1
-        });
-
-        if (!verified) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Invalid MFA token' 
-            });
-        }
-
-        const jwtToken = jwt.sign({ 
-            id: user.id,
-            username: username,
-            isadmin: user.isadmin
-        }, JWT_SECRET, { expiresIn: '5m' });
-
-        req.session.user = {
-            id: user.id,
-            username: username,
-            token: jwtToken
-        };
-
-        db.run('UPDATE users SET last_login = datetime("now", "localtime") WHERE id = ?', [user.id]);
-
-        res.json({
-            success: true,
-            token: jwtToken,
-            username: username
-        });
+        
+        res.json({ success: true, message: 'Sesión cerrada correctamente' });
     });
 });
 
-// Middleware para verificar si es admin
+// Middleware para verificar si el usuario es administrador
 const isAdmin = (req, res, next) => {
-    if (!req.user.isadmin) {
-        return res.status(403).json({ error: 'Access denied' });
+    if (req.user && req.user.isadmin) {
+        next();
+    } else {
+        res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
-    next();
 };
 
-// Modificar la ruta de API para usuarios para incluir paginación
-app.get('/api/users', verifyToken, isAdmin, (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const offset = (page - 1) * limit;
+// Ruta protegida para administradores
+app.get('/admin', verifyToken, isAdmin, (req, res) => {
+    res.render('admin', { user: req.user });
+});
 
-    // Primero obtener el total de registros
-    db.get('SELECT COUNT(*) as total FROM users', [], (err, count) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Database error' });
-        }
+// Ruta protegida para usuarios normales
+app.get('/dashboard', verifyToken, (req, res) => {
+    res.render('dashboard', { user: req.user });
+});
 
-        // Luego obtener los registros paginados
-        db.all(`
-            SELECT id, username, isadmin, created_at 
-            FROM users 
-            ORDER BY created_at ASC
-            LIMIT ? OFFSET ?
-        `, [limit, offset], (err, users) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Database error' });
+// Ruta para verificar estado de autenticación
+app.get('/verify-auth', (req, res) => {
+    if (req.session.userId) {
+        res.json({
+            authenticated: true,
+            user: {
+                id: req.session.userId,
+                username: req.session.username,
+                isadmin: req.session.isadmin
             }
-            res.json({
-                users: users,
-                totalPages: Math.ceil(count.total / limit),
-                currentPage: page,
-                totalRecords: count.total
-            });
         });
-    });
-});
-
-app.put('/api/users/:id', verifyToken, isAdmin, async (req, res) => {
-    const { username, password } = req.body;
-    const userId = req.params.id;
-    const adminId = req.user.id;
-
-    try {
-        // Si ambos campos están vacíos, no hacer nada
-        if (!username && !password) {
-            return res.json({ success: true });
-        }
-
-        let updateFields = [];
-        let params = [];
-        let logDescription = [];
-
-        // Agregar username a la actualización solo si no está vacío
-        if (username) {
-            updateFields.push('username = ?');
-            params.push(username);
-            logDescription.push('username');
-        }
-
-        // Agregar password a la actualización solo si no está vacío
-        if (password) {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            updateFields.push('password = ?');
-            params.push(hashedPassword);
-            logDescription.push('password');
-        }
-
-        // Si hay campos para actualizar
-        if (updateFields.length > 0) {
-            params.push(userId);
-            await new Promise((resolve, reject) => {
-                db.run(
-                    `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
-                    params,
-                    (err) => {
-                        if (err) reject(err);
-                        resolve();
-                    }
-                );
-            });
-
-            // Registrar log de los cambios realizados
-            db.run(
-                'INSERT INTO logs (action_type, action_description, performed_by, performed_on) VALUES (?, ?, ?, ?)',
-                ['UPDATE_USER', `Updated ${logDescription.join(' and ')} for user ID: ${userId}`, adminId, userId]
-            );
-        }
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error updating user:', error);
-        res.status(500).json({ error: 'Database error' });
+    } else {
+        res.json({ authenticated: false });
     }
 });
 
-app.delete('/api/users/:id', verifyToken, isAdmin, (req, res) => {
-    const userId = req.params.id;
-    const adminId = req.user.id;
-
-    db.get('SELECT username FROM users WHERE id = ?', [userId], (err, user) => {
-        if (err) {
-            return res.status(500).json({ error: 'Database error' });
-        }
-
-        db.run('DELETE FROM users WHERE id = ?', [userId], (err) => {
-            if (err) {
-                return res.status(500).json({ error: 'Database error' });
-            }
-
-            // Registrar la acción en logs
-            db.run(
-                'INSERT INTO logs (action_type, action_description, performed_by, performed_on) VALUES (?, ?, ?, ?)',
-                ['DELETE_USER', `Deleted user: ${user.username}`, adminId, userId]
-            );
-
-            res.json({ success: true });
-        });
-    });
-});
-
-// Modificar la ruta del dashboard para redirigir según el tipo de usuario
-app.get('/dashboard', async (req, res) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1] || 
-                     req.query.token || 
-                     req.session?.user?.token;
-
-        if (!token) {
-            return res.redirect('/');
-        }
-
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            if (!req.session.user || req.session.user.id !== decoded.id) {
-                throw new Error('Invalid session');
-            }
-
-            if (decoded.isadmin) {
-                res.render('user-management', {
-                    token: token,
-                    username: decoded.username
-                });
-            } else {
-                res.render('user-dashboard', {
-                    token: token,
-                    username: decoded.username
-                });
-            }
-        } catch (error) {
-            return res.redirect('/');
-        }
-    } catch (error) {
-        return res.redirect('/');
-    }
-});
-
-app.post("/nsubdmn", verifyToken, (req, res) => {
-    const { NSBDMN } = req.body;
-    const userId = req.user.id;
-
-    if (!NSBDMN) {
-        return res.status(400).json({
-            error: 'Subdomain name is required'
-        });
-    }
-
-    shell.exec('sh NSUBDOMAIN.sh ' + NSBDMN);
-    
-    // Registrar la creación del subdominio
-    db.run(
-        'INSERT INTO logs (action_type, action_description, performed_by) VALUES (?, ?, ?)',
-        ['CREATE_SUBDOMAIN', `Created subdomain: ${NSBDMN}.lfsystems.com.co`, userId]
-    );
-
-    return res.json({
-        result: `Successfully created subdomain: ${NSBDMN}.lfsystems.com.co by user ${req.user.username}`
-    });
-});
-
-app.post('/logout', verifyToken, (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
-});
-
-app.get('/check-session', verifyToken, (req, res) => {
-    res.json({ valid: true });
-});
-
-// Modificar la ruta de logs siguiendo el patrón de /dashboard
-app.get('/dashboard-logs', async (req, res) => {
-    try {
-        // Intentar obtener el token del header de autorización
-        const authHeader = req.headers.authorization;
-        let token = authHeader ? authHeader.split(' ')[1] : null;
-
-        // Si no hay token en el header, intentar obtenerlo de la sesión
-        if (!token && req.session?.user?.token) {
-            token = req.session.user.token;
-        }
-
-        // Si no hay token en ningún lado, redirigir al login
-        if (!token) {
-            return res.redirect('/');
-        }
-
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            if (!req.session.user || req.session.user.id !== decoded.id) {
-                throw new Error('Invalid session');
-            }
-
-            if (decoded.isadmin) {
-                res.render('logs', {
-                    token: token,
-                    username: decoded.username
-                });
-            } else {
-                res.redirect('/dashboard');
-            }
-        } catch (error) {
-            return res.redirect('/');
-        }
-    } catch (error) {
-        return res.redirect('/');
-    }
-});
-
+// Ruta para obtener logs (solo admins)
 app.get('/api/logs', verifyToken, isAdmin, (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const offset = (page - 1) * limit;
-
-    // Primero obtener el total de registros
-    db.get('SELECT COUNT(*) as total FROM logs', [], (err, count) => {
+    db.all(`
+        SELECT 
+            logs.id, 
+            logs.action_type, 
+            logs.action_description, 
+            u1.username as performed_by_user,
+            u2.username as performed_on_user,
+            logs.created_at
+        FROM 
+            logs
+        LEFT JOIN 
+            users u1 ON logs.performed_by = u1.id
+        LEFT JOIN 
+            users u2 ON logs.performed_on = u2.id
+        ORDER BY 
+            logs.created_at DESC
+        LIMIT 100
+    `, [], (err, rows) => {
         if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Database error' });
+            console.error('Error al obtener logs:', err.message);
+            return res.status(500).json({ error: 'Server error' });
         }
-
-        // Luego obtener los registros paginados
-        db.all(`
-            SELECT 
-                logs.*,
-                performer.username as performed_by_username,
-                target.username as performed_on_username,
-                datetime(logs.created_at, 'localtime') as created_at
-            FROM logs 
-            LEFT JOIN users performer ON logs.performed_by = performer.id
-            LEFT JOIN users target ON logs.performed_on = target.id
-            ORDER BY logs.created_at DESC
-            LIMIT ? OFFSET ?
-        `, [limit, offset], (err, logs) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            res.json({
-                logs: logs,
-                totalPages: Math.ceil(count.total / limit),
-                currentPage: page,
-                totalRecords: count.total
-            });
-        });
+        
+        res.json(rows);
     });
 });
 
+// Iniciar el servidor
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}.`);
+    console.log(`Server running on port ${port}`);
+    console.log(`Environment: ${NODE_ENV}`);
 });
+
+export default app; 

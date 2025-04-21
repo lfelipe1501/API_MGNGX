@@ -1,0 +1,27 @@
+# Bun configuration for this project
+# This file configures how Bun behaves in this project
+
+# Options for "bun install"
+[install]
+# Don't generate a package-lock.json during "bun install"
+package-lock = false
+# Disable yarn.lock
+yarn-lock = false
+# Enable cache files
+cache = true
+# Disable telemetry reports
+telemetry = false
+
+# Options for development environment
+[dev]
+# Default port for "bun dev"
+port = 3001
+
+# General options
+[test]
+# Configuration for testing with Bun
+
+# Script-specific options
+[scripts]
+# Allow forking scripts
+allow-forking = true

@@ -1,6 +1,6 @@
-const ipRangeCheck = require('ip-range-check');
+import ipRangeCheck from 'ip-range-check';
 
-module.exports = {
+export default {
     ALLOWED_IPS: [
         '127.0.0.1',
         '::1',

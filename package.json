@@ -1,23 +1,23 @@
 {
   "name": "login2fa",
   "version": "1.0.0",
-  "description": "Login APP and subdomain MODULE to nginx lemp stack docker",
+  "description": "Login APP and subdomain MODULE to nginx lemp stack docker (Bun version)",
   "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node server.js",
-    "dev": "cross-env NODE_ENV=development node server.js",
-    "pm2:prod": "pm2 start ecosystem.config.js --only Login2FA-PROD",
-    "pm2:dev": "pm2 start ecosystem.config.js --only Login2FA-DEV",
-    "pm2:start": "pm2 start ecosystem.config.js",
-    "pm2:stop": "pm2 stop ecosystem.config.js",
-    "pm2:restart": "pm2 restart ecosystem.config.js",
-    "pm2:logs": "pm2 logs",
-    "test": "echo \"Verification Environment:\" && npm run dev -- --check-env && npm run start -- --check-env && echo \"\n\nVerification Environment: OK\" && echo ''"
+    "start": "NODE_ENV=production bun run server.js",
+    "dev": "NODE_ENV=development bun --hot run server.js",
+    "bun:prod": "NODE_ENV=production bun run server.js",
+    "bun:dev": "NODE_ENV=development bun --hot run server.js",
+    "service:prod": "bun --smol run services/service-prod.js",
+    "service:dev": "bun --smol run services/service-dev.js",
+    "stop": "bun run services/stop-service.js",
+    "verify": "bun run services/verify-bun.js",
+    "test": "echo \"Verification Environment:\" && bun run server.js --check-env && echo \"\n\nVerification Environment: OK\" && echo ''"
   },
-  "keywords": [],
+  "keywords": ["bun", "login", "2fa"],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -35,8 +35,5 @@
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.7",
     "ua-parser-js": "^2.0.3"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3"
   }
-}
+} 

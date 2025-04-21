@@ -3,7 +3,7 @@
  * This file handles the SQLite database setup and provides utility functions
  */
 
-const sqlite3 = require('sqlite3').verbose();
+import sqlite3 from 'sqlite3';
 const db = new sqlite3.Database('./database.sqlite');
 
 /**
@@ -42,7 +42,4 @@ db.serialize(() => {
     )`);
 });
 
-module.exports = {
-    db,
-    getLocalDateTime
-};
+export { db, getLocalDateTime };
