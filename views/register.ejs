@@ -29,7 +29,7 @@
             </div>
             <div class="form-group admin-checkbox">
                 <label class="checkbox-container">
-                    <input type="checkbox" name="isadmin" value="1">
+                    <input type="checkbox" name="isadmin" value="1" tabindex="0">
                     <span class="checkmark"></span>
                     Is ADMIN
                 </label>
@@ -37,7 +37,6 @@
             <button type="submit">REGISTER</button>
         </form>
         <div id="registerError"></div>
-        <div id="qrCode"></div>
     </div>
 
     <script>
@@ -62,16 +61,25 @@
                 });
 
                 if (response.ok) {
-                    const html = await response.text();
-                    // Abrir en una nueva ventana
-                    const win = window.open('', '_blank');
-                    win.document.write(html);
-                    win.document.close();
+                    const result = await response.json();
                     
-                    // Limpiar el formulario y mostrar mensaje de éxito
-                    e.target.reset();
-                    errorDiv.style.color = 'green';
-                    errorDiv.textContent = 'Registration successful! Please check the new window for your MFA configuration.';
+                    if (result.success) {
+                        // Mostrar mensaje de éxito
+                        errorDiv.style.color = 'green';
+                        errorDiv.textContent = 'Registration successful! A new window with your MFA configuration has been opened.';
+                        
+                        // Limpiar el formulario
+                        e.target.reset();
+                        document.querySelector('input[name="username"]').focus();
+                        
+                        // Abrir la configuración MFA en una nueva ventana
+                        const mfaUrl = `/mfa-config?username=${encodeURIComponent(data.username)}&password=${encodeURIComponent(data.password)}&qrCodeUrl=${encodeURIComponent(result.qr_code)}&secretKey=${encodeURIComponent(result.secret)}`;
+                        window.open(mfaUrl, '_blank', 'noopener,noreferrer');
+                    } else {
+                        // Mostrar el error si hay uno
+                        errorDiv.style.color = 'red';
+                        errorDiv.textContent = result.message || 'Registration failed. Please try again.';
+                    }
                 } else {
                     const error = await response.text();
                     errorDiv.style.color = 'red';
@@ -116,6 +124,53 @@
         // Asegurar que el input de usuario tenga el foco al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('input[name="username"]').focus();
+            
+            // Manejar la visualización de foco para el checkbox Is ADMIN
+            const adminCheckbox = document.querySelector('input[name="isadmin"]');
+            const checkmark = adminCheckbox.parentElement.querySelector('.checkmark');
+            
+            // Verificar si se está usando el tema oscuro
+            const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // Aplicar estilos directamente si estamos en modo oscuro
+            if (isDarkMode) {
+                checkmark.style.backgroundColor = '#333333';
+                checkmark.style.borderColor = '#555555';
+                
+                // Añadir listener para cambios en tiempo real
+                checkmark.addEventListener('mouseenter', () => {
+                    checkmark.style.backgroundColor = '#444444';
+                });
+                
+                checkmark.addEventListener('mouseleave', () => {
+                    if (!adminCheckbox.checked) {
+                        checkmark.style.backgroundColor = '#333333';
+                    }
+                });
+            }
+            
+            adminCheckbox.addEventListener('focus', () => {
+                // Agregar una clase para mejor visualización cuando está en foco
+                checkmark.classList.add('focus-visible');
+            });
+            
+            adminCheckbox.addEventListener('blur', () => {
+                // Quitar la clase cuando pierde el foco
+                checkmark.classList.remove('focus-visible');
+            });
+            
+            // Actualizar estilo cuando el checkbox cambia
+            adminCheckbox.addEventListener('change', () => {
+                if (isDarkMode) {
+                    if (adminCheckbox.checked) {
+                        checkmark.style.backgroundColor = '#45a049';
+                        checkmark.style.borderColor = '#45a049';
+                    } else {
+                        checkmark.style.backgroundColor = '#333333';
+                        checkmark.style.borderColor = '#555555';
+                    }
+                }
+            });
         });
     </script>
 </body>

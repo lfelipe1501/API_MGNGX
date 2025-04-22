@@ -20,6 +20,42 @@
         --border-color: #444444;
         --container-bg: #4e423b47;
     }
+    
+    .page-btn {
+        border-color: #444;
+        color: #fff;
+    }
+
+    .page-number {
+        background-color: #333;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .page-number:hover:not(.active) {
+        background-color: #444;
+    }
+    
+    /* Estilos más específicos para el checkbox en tema oscuro */
+    .checkbox-container .checkmark {
+        background-color: #333333 !important;
+        border-color: #555555 !important;
+    }
+    
+    .checkbox-container:hover input ~ .checkmark {
+        background-color: #444444 !important;
+    }
+    
+    .checkbox-container input:focus ~ .checkmark,
+    .checkmark.focus-visible {
+        border-color: #45a049 !important;
+        box-shadow: 0 0 8px rgba(69, 160, 73, 0.7) !important;
+    }
+    
+    .checkbox-container input:checked ~ .checkmark {
+        background-color: #45a049 !important;
+        border-color: #45a049 !important;
+    }
 }
 
 body {
@@ -223,6 +259,21 @@ button:hover {
 
 /* Error message styling */
 .error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Session message styling */
+.session-message {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.session-message.error {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
@@ -537,24 +588,6 @@ button:hover {
     padding: 0 4px;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .page-btn {
-        border-color: #444;
-        color: #fff;
-    }
-
-    .page-number {
-        background-color: #333;
-        border-color: #444;
-        color: #fff;
-    }
-
-    .page-number:hover:not(.active) {
-        background-color: #444;
-    }
-}
-
 /* Estilos para los botones de acción */
 .action-buttons {
     display: flex;
@@ -818,10 +851,31 @@ button.loading::after {
     background-color: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: 4px;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .checkbox-container:hover input ~ .checkmark {
     background-color: #eee;
+}
+
+@media (prefers-color-scheme: dark) {
+    .checkbox-container:hover input ~ .checkmark {
+        background-color: #444444 !important;
+    }
+}
+
+/* Estilo para cuando el checkbox recibe foco por teclado (Tab) */
+.checkbox-container input:focus ~ .checkmark {
+    outline: none;
+    border-color: #37d65c;
+    box-shadow: 0 0 8px rgba(55, 214, 92, 0.5);
+}
+
+/* Estilo adicional para cuando se está navegando con teclado (Tab) */
+.checkmark.focus-visible {
+    border-color: #37d65c;
+    box-shadow: 0 0 12px rgba(55, 214, 92, 0.7);
+    transition: all 0.2s ease;
 }
 
 .checkbox-container input:checked ~ .checkmark {

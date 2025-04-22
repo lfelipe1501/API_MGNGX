@@ -24,6 +24,15 @@
 <body>
 	<div class="container">
 		<h2>LOGIN FORM</h2>
+		<% if (typeof sessionExpired !== 'undefined' && sessionExpired) { %>
+			<div class="session-message error">Your session has expired. Please log in again.</div>
+		<% } %>
+		<% if (typeof session_expired !== 'undefined' && session_expired === 'true') { %>
+			<div class="session-message error">Your session has expired. Please log in again.</div>
+		<% } %>
+		<% if (typeof invalid_token !== 'undefined' && invalid_token === 'true') { %>
+			<div class="session-message error">Authentication error. Please log in again.</div>
+		<% } %>
 		<form id="loginForm">
 			<div class="input-container">
 				<span class="material-icons">person</span>
@@ -168,7 +177,7 @@
 				.map(input => input.value)
 				.join('');
 			tokenInput.value = token;
-			
+
 			try {
 				<% if (isProduction) { %>
 				// Recaptcha V3 (invisible)
@@ -193,12 +202,17 @@
 				const data = await response.json();
 				
 				if (data.success) {
+					// Guardar el token en localStorage (para peticiones AJAX)
 					localStorage.setItem('jwtToken', data.token);
-					window.location.href = '/dashboard';
+					
+					// Usar una redirección limpia al dashboard, el token ya está guardado en la sesión
+					setTimeout(() => {
+						window.location.href = '/dashboard';
+					}, 100);
 				} else {
 					submitButton.classList.remove('loading');
 					errorDiv.textContent = data.error || 'Login failed';
-					console.error('Error:', errorDiv.textContent);
+					console.error('Login error:', data.error);
 					
 					<% if (!isProduction) { %>
 					// Resetear el captcha en desarrollo
@@ -206,10 +220,13 @@
 					recaptchaCompleted = false;
 					<% } %>
 					
-					if (errorDiv.textContent ==  "Invalid MFA token") {
+					// Verificar si el error es de token MFA o de credenciales
+					if (data.error && (data.error.includes('2FA') || data.error.includes('token'))) {
+						// Solo limpiar el código MFA si el error es del token
 						tfaInputs.forEach(input => input.value = '');
 						tfaInputs[0].focus();
 					} else {
+						// Para otros errores, limpiar todo
 						tfaInputs.forEach(input => input.value = '');
 						tfaContainer.style.display = 'none';
 						tfaContainer.classList.remove('fade-in');
@@ -270,6 +287,27 @@
 		// Asegurar que el input de usuario tenga el foco al cargar la página
 		document.addEventListener('DOMContentLoaded', () => {
 			document.querySelector('input[name="username"]').focus();
+		});
+	</script>
+	
+	<!-- Script para manejar parámetros de URL -->
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			// Verificar si hay mensajes en la URL
+			const urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.get('session_expired') === 'true') {
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'session-message error';
+				errorDiv.textContent = 'Your session has expired. Please log in again.';
+				document.querySelector('.container h2').insertAdjacentElement('afterend', errorDiv);
+			}
+			
+			if (urlParams.get('invalid_token') === 'true') {
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'session-message error';
+				errorDiv.textContent = 'Authentication error. Please log in again.';
+				document.querySelector('.container h2').insertAdjacentElement('afterend', errorDiv);
+			}
 		});
 	</script>
 </body>
